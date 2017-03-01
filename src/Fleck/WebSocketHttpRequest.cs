@@ -5,7 +5,9 @@ namespace Fleck
 {
     public class WebSocketHttpRequest
     {
-        private readonly IDictionary<string, string> _headers = new Dictionary<string, string>(System.StringComparer.InvariantCultureIgnoreCase);
+        private readonly IDictionary<string, string> _headers = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+        //todo : .net core
+        //private readonly IDictionary<string, string> _headers = new Dictionary<string, string>(System.StringComparer.InvariantCultureIgnoreCase);
 
         public string Method { get; set; }
 

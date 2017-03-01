@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Fleck
 {
@@ -67,59 +68,109 @@ namespace Fleck
             throw new NotSupportedException("QueuedStream does not support synchronous write operations yet.");
         }
 
-        public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+        /// <summary>
+        /// todo:  .net core(netstandard.library) (Instead of BeginRead and EndRead)
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return _stream.BeginRead(buffer, offset, count, callback, state);
+            return _stream.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
-        public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+        //[Obsolete("bad; .net core(netstandard.library) does not support")]
+        //public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+        //{
+        //    return _stream.BeginRead(buffer, offset, count, callback, state);
+        //}
+
+        //[Obsolete("bad; .net core(netstandard.library)  does not support")]
+        //public override int EndRead(IAsyncResult asyncResult)
+        //{
+        //    return _stream.EndRead(asyncResult);
+        //}
+
+
+
+        /// <summary>
+        /// todo:  .net core(netstandard.library) (Instead of BeginWrite and EndWrite)
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public new Task WriteAsync(byte[] buffer, int offset, int count)
         {
             lock (_queue)
             {
-                var data = new WriteData(buffer, offset, count, callback, state);
+                var data = new WriteData(buffer, offset, count, null, null);
                 if (_pendingWrite > 0)
                 {
                     _queue.Enqueue(data);
-                    return data.AsyncResult;
+                    return Task.FromResult(1);
                 }
-                return BeginWriteInternal(buffer, offset, count, callback, state, data);
+                return WriteInternalAsync(buffer, offset, count, data);
             }
         }
 
-        public override int EndRead(IAsyncResult asyncResult)
-        {
-            return _stream.EndRead(asyncResult);
-        }
 
-        public override void EndWrite(IAsyncResult asyncResult)
-        {
-            if (asyncResult is QueuedWriteResult)
-            {
-                var queuedResult = asyncResult as QueuedWriteResult;
-                if (queuedResult.Exception != null) throw queuedResult.Exception;
-                var ar = queuedResult.ActualResult;
-                if (ar == null)
-                {
-                    throw new NotSupportedException(
-                        "QueuedStream does not support synchronous write operations. Please wait for callback to be invoked before calling EndWrite.");
-                }
-                // EndWrite on actual stream should already be invoked.
-            }
-            else
-            {
-                throw new ArgumentException();
-            }
-        }
+
+        //[Obsolete("bad; .net core(netstandard.library)  does not support")]
+        //public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+        //{
+        //    lock (_queue)
+        //    {
+        //        var data = new WriteData(buffer, offset, count, callback, state);
+        //        if (_pendingWrite > 0)
+        //        {
+        //            _queue.Enqueue(data);
+        //            return data.AsyncResult;
+        //        }
+        //        return BeginWriteInternal(buffer, offset, count, callback, state, data);
+        //    }
+        //}
+
+
+
+        //[Obsolete("bad; .net core(netstandard.library)  does not support")]
+        //public override void EndWrite(IAsyncResult asyncResult)
+        //{
+        //    if (asyncResult is QueuedWriteResult)
+        //    {
+        //        var queuedResult = asyncResult as QueuedWriteResult;
+        //        if (queuedResult.Exception != null) throw queuedResult.Exception;
+        //        var ar = queuedResult.ActualResult;
+        //        if (ar == null)
+        //        {
+        //            throw new NotSupportedException(
+        //                "QueuedStream does not support synchronous write operations. Please wait for callback to be invoked before calling EndWrite.");
+        //        }
+        //        // EndWrite on actual stream should already be invoked.
+        //    }
+        //    else
+        //    {
+        //        throw new ArgumentException();
+        //    }
+        //}
 
         public override void Flush()
         {
             _stream.Flush();
         }
 
-        public override void Close()
-        {
-            _stream.Close();
-        }
+
+        ///// <summary>
+        ///// (Instead of BeginRead)
+        ///// </summary>
+        //[Obsolete("bad; .net core(netstandard.library) does not support")]
+        //public override void Close()
+        //{
+        //    _stream.Close();
+
+        //}
 
         protected override void Dispose(bool disposing)
         {
@@ -134,51 +185,89 @@ namespace Fleck
             base.Dispose(disposing);
         }
 
-        IAsyncResult BeginWriteInternal(byte[] buffer, int offset, int count, AsyncCallback callback, object state, WriteData queued)
+        async Task WriteInternalAsync(byte[] buffer, int offset, int count,  WriteData queued)
         {
             _pendingWrite++;
-            var result = _stream.BeginWrite(buffer, offset, count, ar =>
+            try
             {
-                // callback can be executed even before return value of BeginWriteInternal is set to this property
-                queued.AsyncResult.ActualResult = ar;
-                try
-                {
-                    // so that we can call BeginWrite again
-                    _stream.EndWrite(ar);
-                }
-                catch (Exception exc)
-                {
-                    queued.AsyncResult.Exception = exc;
-                }
+                await _stream.WriteAsync(buffer, offset, count);
 
-                // one down, another is good to go
-                lock (_queue)
+            }
+            catch (Exception exc)
+            {
+                queued.AsyncResult.Exception = exc;
+            }
+
+
+            lock (_queue)
+            {
+                _pendingWrite--;
+                while (_queue.Count > 0)
                 {
-                    _pendingWrite--;
-                    while (_queue.Count > 0)
+                    var data = _queue.Dequeue();
+                    try
                     {
-                        var data = _queue.Dequeue();
-                        try
-                        {
-                            data.AsyncResult.ActualResult = BeginWriteInternal(data.Buffer, data.Offset, data.Count, data.Callback, data.State, data);
-                            break;
-                        }
-                        catch (Exception exc)
-                        {
-                            _pendingWrite--;
-                            data.AsyncResult.Exception = exc;
-                            data.Callback(data.AsyncResult);
-                        }
+                        WriteInternalAsync(data.Buffer, data.Offset, data.Count, data).GetAwaiter().GetResult();
+                        break;
                     }
-                    callback(queued.AsyncResult);
+                    catch (Exception exc)
+                    {
+                        _pendingWrite--;
+                        data.AsyncResult.Exception = exc;
+                        data.Callback(data.AsyncResult);
+                    }
                 }
-            }, state);
+            }
 
-            // always return the wrapped async result.
-            // this is especially important if the underlying stream completed the operation synchronously (hence "result.CompletedSynchronously" is true!)
-            queued.AsyncResult.ActualResult = result;
-            return queued.AsyncResult;
         }
+
+        //IAsyncResult BeginWriteInternal(byte[] buffer, int offset, int count, AsyncCallback callback, object state, WriteData queued)
+        //{
+        //    _pendingWrite++;
+
+
+        //    var result = _stream.BeginWrite(buffer, offset, count, ar =>
+        //    {
+        //        // callback can be executed even before return value of BeginWriteInternal is set to this property
+        //        queued.AsyncResult.ActualResult = ar;
+        //        try
+        //        {
+        //            // so that we can call BeginWrite again
+        //            _stream.EndWrite(ar);
+        //        }
+        //        catch (Exception exc)
+        //        {
+        //            queued.AsyncResult.Exception = exc;
+        //        }
+
+        //        // one down, another is good to go
+        //        lock (_queue)
+        //        {
+        //            _pendingWrite--;
+        //            while (_queue.Count > 0)
+        //            {
+        //                var data = _queue.Dequeue();
+        //                try
+        //                {
+        //                    data.AsyncResult.ActualResult = BeginWriteInternal(data.Buffer, data.Offset, data.Count, data.Callback, data.State, data);
+        //                    break;
+        //                }
+        //                catch (Exception exc)
+        //                {
+        //                    _pendingWrite--;
+        //                    data.AsyncResult.Exception = exc;
+        //                    data.Callback(data.AsyncResult);
+        //                }
+        //            }
+        //            callback(queued.AsyncResult);
+        //        }
+        //    }, state);
+
+        //    // always return the wrapped async result.
+        //    // this is especially important if the underlying stream completed the operation synchronously (hence "result.CompletedSynchronously" is true!)
+        //    queued.AsyncResult.ActualResult = result;
+        //    return queued.AsyncResult;
+        //}
 
         #region Nested type: WriteData
 

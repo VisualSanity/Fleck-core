@@ -4,8 +4,11 @@
   "dependencies": {
     "Fleck": "1.0.0-*",
     "Moq": "4.7.0",
-    "NETStandard.Library": "1.6.0",
-    "NUnit": "3.6.0"
+    "NETStandard.Library": "1.6.1",
+    "NUnit": "3.6.0",
+    "NUnit.Runners": "3.6.0",
+    "System.Threading.Thread": "4.0.0-rc2-24027",
+    "System.Threading.ThreadPool": "4.3.0"
   },
 
   "frameworks": {

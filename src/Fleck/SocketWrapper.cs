@@ -45,19 +45,31 @@ namespace Fleck
                 _stream = new NetworkStream(_socket);
         }
 
-        public Task Authenticate(X509Certificate2 certificate, SslProtocols enabledSslProtocols, Action callback, Action<Exception> error)
+        //public Task Authenticate(X509Certificate2 certificate, SslProtocols enabledSslProtocols, Action callback, Action<Exception> error)
+        //{
+        //    var ssl = new SslStream(_stream, false);
+        //    _stream = new QueuedStream(ssl);
+        //    Func<AsyncCallback, object, IAsyncResult> begin =
+        //        (cb, s) => ssl.BeginAuthenticateAsServer(certificate, false, enabledSslProtocols, false, cb, s);
+
+        //    Task task = Task.Factory.FromAsync(begin, ssl.EndAuthenticateAsServer, null);
+        //    task.ContinueWith(t => callback(), TaskContinuationOptions.NotOnFaulted)
+        //        .ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+        //    task.ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+
+        //    return task;
+        //}
+
+        public async Task Authenticate(X509Certificate2 certificate, SslProtocols enabledSslProtocols, Action callback, Action<Exception> error)
         {
             var ssl = new SslStream(_stream, false);
             _stream = new QueuedStream(ssl);
-            Func<AsyncCallback, object, IAsyncResult> begin =
-                (cb, s) => ssl.BeginAuthenticateAsServer(certificate, false, enabledSslProtocols, false, cb, s);
 
-            Task task = Task.Factory.FromAsync(begin, ssl.EndAuthenticateAsServer, null);
-            task.ContinueWith(t => callback(), TaskContinuationOptions.NotOnFaulted)
+            var task = ssl.AuthenticateAsServerAsync(certificate, false, enabledSslProtocols, false);
+
+            await task.ContinueWith(t => callback(), TaskContinuationOptions.NotOnFaulted)
                 .ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
-            task.ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
-
-            return task;
+            await task.ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public void Listen(int backlog)
@@ -91,14 +103,31 @@ namespace Fleck
             get { return _socket.LocalEndPoint; }
         }
 
+        //public Task<int> Receive(byte[] buffer, Action<int> callback, Action<Exception> error, int offset)
+        //{
+        //    try
+        //    {
+        //        Func<AsyncCallback, object, IAsyncResult> begin =
+        //       (cb, s) => _stream.BeginRead(buffer, offset, buffer.Length, cb, s);
+
+        //        Task<int> task = Task.Factory.FromAsync<int>(begin, _stream.EndRead, null);
+        //        task.ContinueWith(t => callback(t.Result), TaskContinuationOptions.NotOnFaulted)
+        //            .ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+        //        task.ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+        //        return task;
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        error(e);
+        //        return null;
+        //    }
+        //}
+
         public Task<int> Receive(byte[] buffer, Action<int> callback, Action<Exception> error, int offset)
         {
             try
             {
-                Func<AsyncCallback, object, IAsyncResult> begin =
-               (cb, s) => _stream.BeginRead(buffer, offset, buffer.Length, cb, s);
-
-                Task<int> task = Task.Factory.FromAsync<int>(begin, _stream.EndRead, null);
+                var task = _stream.ReadAsync(buffer, offset, buffer.Length);
                 task.ContinueWith(t => callback(t.Result), TaskContinuationOptions.NotOnFaulted)
                     .ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
                 task.ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
@@ -111,15 +140,26 @@ namespace Fleck
             }
         }
 
-        public Task<ISocket> Accept(Action<ISocket> callback, Action<Exception> error)
+        //public Task<ISocket> Accept(Action<ISocket> callback, Action<Exception> error)
+        //{
+        //    Func<IAsyncResult, ISocket> end = r => _tokenSource.Token.IsCancellationRequested ? null : new SocketWrapper(_socket.EndAccept(r));
+        //    var task = _taskFactory.FromAsync(_socket.BeginAccept, end, null);
+        //    task.ContinueWith(t => callback(t.Result), TaskContinuationOptions.OnlyOnRanToCompletion)
+        //        .ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+        //    task.ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+        //    return task;
+        //}
+
+
+        public async Task<ISocket> Accept(Action<ISocket> callback, Action<Exception> error)
         {
-            Func<IAsyncResult, ISocket> end = r => _tokenSource.Token.IsCancellationRequested ? null : new SocketWrapper(_socket.EndAccept(r));
-            var task = _taskFactory.FromAsync(_socket.BeginAccept, end, null);
-            task.ContinueWith(t => callback(t.Result), TaskContinuationOptions.OnlyOnRanToCompletion)
+            var task = Task.FromResult(_tokenSource.Token.IsCancellationRequested ? null : new SocketWrapper(await _socket.AcceptAsync())); 
+            await task.ContinueWith(t => callback(t.Result), TaskContinuationOptions.OnlyOnRanToCompletion)
                 .ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
-            task.ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
-            return task;
+            await task.ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+            return await task;
         }
+
 
         public void Dispose()
         {
@@ -128,18 +168,49 @@ namespace Fleck
             if (_socket != null) _socket.Dispose();
         }
 
+        //public void Close()
+        //{
+        //    _tokenSource.Cancel();
+        //    if (_stream != null) _stream.Close();
+        //    if (_socket != null) _socket.Close();
+        //}
+
         public void Close()
         {
             _tokenSource.Cancel();
-            if (_stream != null) _stream.Close();
-            if (_socket != null) _socket.Close();
+            if (_stream != null) _stream.Dispose();
+            if (_socket != null) _socket.Dispose();
         }
 
-        public int EndSend(IAsyncResult asyncResult)
-        {
-            _stream.EndWrite(asyncResult);
-            return 0;
-        }
+        //public int EndSend(IAsyncResult asyncResult)
+        //{
+        //    _stream.EndWrite(asyncResult);
+        //    return 0;
+        //}
+
+        //public Task Send(byte[] buffer, Action callback, Action<Exception> error)
+        //{
+        //    if (_tokenSource.IsCancellationRequested)
+        //        return null;
+
+        //    try
+        //    {
+        //        Func<AsyncCallback, object, IAsyncResult> begin =
+        //            (cb, s) => _stream.BeginWrite(buffer, 0, buffer.Length, cb, s);
+
+        //        Task task = Task.Factory.FromAsync(begin, _stream.EndWrite, null);
+        //        task.ContinueWith(t => callback(), TaskContinuationOptions.NotOnFaulted)
+        //            .ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+        //        task.ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+
+        //        return task;
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        error(e);
+        //        return null;
+        //    }
+        //}
 
         public Task Send(byte[] buffer, Action callback, Action<Exception> error)
         {
@@ -148,10 +219,7 @@ namespace Fleck
 
             try
             {
-                Func<AsyncCallback, object, IAsyncResult> begin =
-                    (cb, s) => _stream.BeginWrite(buffer, 0, buffer.Length, cb, s);
-
-                Task task = Task.Factory.FromAsync(begin, _stream.EndWrite, null);
+                var task = _stream.WriteAsync(buffer, 0, buffer.Length);
                 task.ContinueWith(t => callback(), TaskContinuationOptions.NotOnFaulted)
                     .ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
                 task.ContinueWith(t => error(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
