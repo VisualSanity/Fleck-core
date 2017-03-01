@@ -1,6 +1,6 @@
-Fleck
+Fleck-core
 ===
-
+Fleck-core forked from [statianzo/Fleck].
 Fleck is a WebSocket server implementation in C#. Branched from the
 [Nugget][nugget] project, Fleck requires no inheritance, container, or
 additional references.
@@ -150,3 +150,4 @@ THE SOFTWARE.
 
 
 [nugget]: http://nugget.codeplex.com/ 
+[statianzo/Fleck]:https://github.com/statianzo/Fleck
