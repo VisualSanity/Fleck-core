@@ -1,2 +1,5 @@
+#:E:\Project\Fleck-core\src\Fleck\Fleck.xproj
 #:E:\Project\Fleck-core\src\Samples\ConsoleApp\ConsoleApp.xproj
 E:\Project\Fleck-core\src\Samples\ConsoleApp\ConsoleApp.xproj|E:\Project\Fleck-core\src\Fleck\Fleck.xproj
+#:E:\Project\Fleck-core\src\Fleck.Tests\Fleck.Tests.xproj
+E:\Project\Fleck-core\src\Fleck.Tests\Fleck.Tests.xproj|E:\Project\Fleck-core\src\Fleck\Fleck.xproj

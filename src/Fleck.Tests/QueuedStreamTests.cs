@@ -105,16 +105,10 @@ namespace Fleck.Tests
             m.Verify(x => x.SetLength(100L));
         }
 
-        [Test]
-        public void Write()
-        {
-            var q = new QueuedStream(new MemoryStream());
 
-            Assert.Throws<NotSupportedException>(() => q.Write(new byte[] { 1, 2, 3 }, 0, 3));
-        }
 
         [Test]
-        public void BeginReadAsync()
+        public void ReadAsync()
         {
             var m = new Mock<Stream>();
             var q = new QueuedStream(m.Object);
@@ -156,6 +150,23 @@ namespace Fleck.Tests
         //    m.VerifyAll();
         //}
 
+
+        [Test]
+        public void Write()
+        {
+            var q = new QueuedStream(new MemoryStream());
+
+            Assert.Throws<NotSupportedException>(() => q.Write(new byte[] { 1, 2, 3 }, 0, 3));
+        }
+
+        [Test]
+        public void WriteAsync()
+        {
+            var q = new QueuedStream(new MemoryStream());
+            var a = new MockAsyncResult("A");
+            Assert.Throws<ArgumentException>(() => q.WriteAsync(new byte[] { 1, 2, 3 }, 0, 3));
+        }
+
         //[Test]
         //public void EndWrite()
         //{
@@ -190,6 +201,19 @@ namespace Fleck.Tests
 
         //    m.VerifyAll();
         //}
+
+        [Test]
+        public void Close()
+        {
+            var m = new Mock<Stream>();
+            var q = new QueuedStream(m.Object);
+
+            m.Setup(x => x.Dispose());
+
+            q.Dispose();
+
+            m.VerifyAll();
+        }
 
         //[Test]
         //public void ConcurrentBeginWrites()

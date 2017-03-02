@@ -17,5 +17,8 @@
     "netcoreapp1.0": {
       "imports": "dnxcore50"
     }
+    //"net462": {
+    //  "dependencies": { "System.Net.Security": "4.0.0" }
+    //}
   }
- }
+}
