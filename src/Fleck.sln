@@ -1,20 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.438
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{BDA01C02-E4AC-42BA-898A-ED4752F676EF}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Fleck.Tests", "Fleck.Tests\Fleck.Tests.xproj", "{282F53A6-1DAF-41E5-96F3-3F33AD7E2670}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Fleck", "Fleck\Fleck.xproj", "{40CF05E0-02F9-4754-87BF-D39AE46464A7}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ConsoleApp", "Samples\ConsoleApp\ConsoleApp.xproj", "{A378CCB5-9803-41C8-8F03-FF2DF59FC16F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{94916210-8660-46DE-B66B-E152BF6A4D2B}"
 	ProjectSection(SolutionItems) = preProject
 		global.json = global.json
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fleck", "Fleck\Fleck.csproj", "{40CF05E0-02F9-4754-87BF-D39AE46464A7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "Samples\ConsoleApp\ConsoleApp.csproj", "{A378CCB5-9803-41C8-8F03-FF2DF59FC16F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fleck.Tests", "Fleck.Tests\Fleck.Tests.csproj", "{B7A2973E-FF46-454E-8377-DAC84DDFB2E9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,14 +24,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{282F53A6-1DAF-41E5-96F3-3F33AD7E2670}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{282F53A6-1DAF-41E5-96F3-3F33AD7E2670}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{282F53A6-1DAF-41E5-96F3-3F33AD7E2670}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{282F53A6-1DAF-41E5-96F3-3F33AD7E2670}.Debug|x86.Build.0 = Debug|Any CPU
-		{282F53A6-1DAF-41E5-96F3-3F33AD7E2670}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{282F53A6-1DAF-41E5-96F3-3F33AD7E2670}.Release|Any CPU.Build.0 = Release|Any CPU
-		{282F53A6-1DAF-41E5-96F3-3F33AD7E2670}.Release|x86.ActiveCfg = Release|Any CPU
-		{282F53A6-1DAF-41E5-96F3-3F33AD7E2670}.Release|x86.Build.0 = Release|Any CPU
 		{40CF05E0-02F9-4754-87BF-D39AE46464A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{40CF05E0-02F9-4754-87BF-D39AE46464A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40CF05E0-02F9-4754-87BF-D39AE46464A7}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -48,12 +40,23 @@ Global
 		{A378CCB5-9803-41C8-8F03-FF2DF59FC16F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A378CCB5-9803-41C8-8F03-FF2DF59FC16F}.Release|x86.ActiveCfg = Release|Any CPU
 		{A378CCB5-9803-41C8-8F03-FF2DF59FC16F}.Release|x86.Build.0 = Release|Any CPU
+		{B7A2973E-FF46-454E-8377-DAC84DDFB2E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7A2973E-FF46-454E-8377-DAC84DDFB2E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7A2973E-FF46-454E-8377-DAC84DDFB2E9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B7A2973E-FF46-454E-8377-DAC84DDFB2E9}.Debug|x86.Build.0 = Debug|Any CPU
+		{B7A2973E-FF46-454E-8377-DAC84DDFB2E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7A2973E-FF46-454E-8377-DAC84DDFB2E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7A2973E-FF46-454E-8377-DAC84DDFB2E9}.Release|x86.ActiveCfg = Release|Any CPU
+		{B7A2973E-FF46-454E-8377-DAC84DDFB2E9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A378CCB5-9803-41C8-8F03-FF2DF59FC16F} = {BDA01C02-E4AC-42BA-898A-ED4752F676EF}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7D8E46BD-09AA-4202-8A78-701506128949}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Samples\ConsoleApp\ConsoleApp.csproj
